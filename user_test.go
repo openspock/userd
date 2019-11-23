@@ -10,6 +10,10 @@ func TestParseUser(t *testing.T) {
 		t.Error(err)
 		t.Fail()
 	}
+	if len(UserTable) != 1 {
+		t.Error("UserTable should have exactly 1 entry")
+		t.Fail()
+	}
 	u := UserTable["test@openspock.org"]
 	if &u == nil {
 		t.Error("User can't be nil")

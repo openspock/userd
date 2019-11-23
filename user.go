@@ -78,7 +78,7 @@ type Configuration struct {
 // file:/etc/userd
 // https://openspock.org/userd
 func NewConfig(file string) (*Configuration, error) {
-	p := strings.Split(file, ":")
+	p := strings.Split(file, "://")
 	if len(p) != 2 {
 		return nil, errors.New("file doesn't have protocol information")
 	}
@@ -89,7 +89,7 @@ func NewConfig(file string) (*Configuration, error) {
 	default:
 		return nil, errors.New("unknown protocol")
 	}
-	c := Configuration{file, protocol}
+	c := Configuration{p[1], protocol}
 	c.Init()
 	return &c, nil
 }
@@ -190,10 +190,10 @@ func (c *Configuration) initFile(file string, handler parseRecord, insertIntoTab
 }
 
 // UserTable is a map of user email to User
-var UserTable map[string]User
+var UserTable = make(map[string]User)
 
 // filePermissionTable is a map of UserID to a map of File to FilePermission
-var filePermissionTable map[string]map[string][]FilePermission
+var filePermissionTable = make(map[string]map[string][]FilePermission)
 
 // roleTable is a map of RoleID to Role
-var roleTable map[string]Role
+var roleTable = make(map[string]Role)
