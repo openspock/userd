@@ -120,7 +120,7 @@ func parseFilePermission(record []string) (interface{}, string, error) {
 	if err != nil {
 		return FilePermission{}, "", err
 	}
-	role := roleTable[record[2]]
+	role := RoleTable[record[2]]
 	return FilePermission{record[0], record[1], role, assignment, expiration}, record[0], nil
 }
 
@@ -136,21 +136,21 @@ func userTableInsert(key string, val interface{}) {
 
 func roleTableInsert(key string, val interface{}) {
 	if r, ok := val.(Role); ok {
-		roleTable[key] = r
+		RoleTable[key] = r
 	}
 }
 
 func filePermissionTableInsert(key string, val interface{}) {
 	if fp, ok := val.(FilePermission); ok {
-		if fpMap := filePermissionTable[key]; fpMap == nil {
-			filePermissionTable[key] = make(map[string][]FilePermission)
+		if fpMap := FilePermissionTable[key]; fpMap == nil {
+			FilePermissionTable[key] = make(map[string][]FilePermission)
 		}
-		if fps := filePermissionTable[key][fp.File]; fps == nil {
-			filePermissionTable[key][fp.File] = []FilePermission{fp}
+		if fps := FilePermissionTable[key][fp.File]; fps == nil {
+			FilePermissionTable[key][fp.File] = []FilePermission{fp}
 		} else {
-			fps := filePermissionTable[key][fp.File]
+			fps := FilePermissionTable[key][fp.File]
 			fps = append(fps, fp)
-			filePermissionTable[key][fp.File] = fps
+			FilePermissionTable[key][fp.File] = fps
 		}
 	}
 }
@@ -192,8 +192,8 @@ func (c *Configuration) initFile(file string, handler parseRecord, insertIntoTab
 // UserTable is a map of user email to User
 var UserTable = make(map[string]User)
 
-// filePermissionTable is a map of UserID to a map of File to FilePermission
-var filePermissionTable = make(map[string]map[string][]FilePermission)
+// FilePermissionTable is a map of UserID to a map of File to FilePermission
+var FilePermissionTable = make(map[string]map[string][]FilePermission)
 
-// roleTable is a map of RoleID to Role
-var roleTable = make(map[string]Role)
+// RoleTable is a map of RoleID to Role
+var RoleTable = make(map[string]Role)

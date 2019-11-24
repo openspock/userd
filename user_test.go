@@ -24,4 +24,19 @@ func TestParseUser(t *testing.T) {
 		t.Error("user email invalid " + u.Email)
 		t.Fail()
 	}
+	fp := FilePermissionTable[u.UserID]
+	for k, v := range fp {
+		if k != "./filepermission.conf" {
+			t.Error("file name incorrect - " + k)
+			t.Fail()
+		}
+		if v[0].UserID != u.UserID {
+			t.Error("file permission for incorrect user id found - " + v[0].UserID)
+			t.Fail()
+		}
+		if v[0].Roles.Name == "admin" {
+			t.Error("incorrect role assigned for file permission - " + v[0].Roles.Name)
+			t.Fail()
+		}
+	}
 }
