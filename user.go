@@ -31,6 +31,20 @@ type Role struct {
 	Name   string
 }
 
+// NewRole creates a new Role and returns it.
+func NewRole(name string) (*Role, error) {
+	for _, v := range RoleTable {
+		if v.Name == name {
+			return nil, errors.New(name + " already exists")
+		}
+	}
+	uuid, err := uuid.NewRandom()
+	if err != nil {
+		return nil, err
+	}
+	return &Role{RoleID: uuid.String(), Name: name}, nil
+}
+
 // User represents a user which requires authorization.
 // Authentication is managed separately using FilePermission
 //
@@ -167,13 +181,22 @@ func (c *Configuration) initExisting(file string, handler parseRecord, insertInt
 
 // WriteUser writes a user to the user conf file.
 func (c *Configuration) WriteUser(u *User) error {
-	f, err := os.OpenFile(c.userConfFileName(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	return c.write(c.userConfFileName(), []string{u.UserID, u.secret, u.Salt, u.Email, u.Description, u.Since.Format(time.RFC3339)})
+}
+
+// WriteRole writes a role to the role conf file.
+func (c *Configuration) WriteRole(r *Role) error {
+	return c.write(c.roleConfFileName(), []string{r.RoleID, r.Name})
+}
+
+func (c *Configuration) write(file string, entry []string) error {
+	f, err := os.OpenFile(file, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 	w := csv.NewWriter(f)
-	if err := w.Write([]string{u.UserID, u.secret, u.Salt, u.Email, u.Description, u.Since.Format(time.RFC3339)}); err != nil {
+	if err := w.Write(entry); err != nil {
 		return err
 	}
 	w.Flush()

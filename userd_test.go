@@ -9,3 +9,17 @@ func TestCreateUser(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestCreateRoleShouldFailForExistingRole(t *testing.T) {
+	if err := CreateRole("admin", "file://./config/sample"); err == nil {
+		t.Errorf("CreateRole should fail for an existing role")
+		t.FailNow()
+	}
+}
+
+func TestCreateRoleForNonExistingRole(t *testing.T) {
+	if err := CreateRole("api", "file://./config/sample"); err != nil {
+		t.Errorf("CreateRole should fail for an existing role")
+		t.FailNow()
+	}
+}

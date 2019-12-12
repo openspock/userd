@@ -31,7 +31,13 @@ func CreateUser(email string, password string, description string, roleID string
 		return err
 	}
 	c, err := NewConfig(file)
-	c.WriteUser(u)
+	if err != nil {
+		return err
+	}
+	if err := c.WriteUser(u); err != nil {
+		return err
+	}
+	log.Info("CreateUser", log.AppMsg, map[string]interface{}{"email": email, "result": "success", "message": email + " has been created successfully"})
 	return nil
 }
 
@@ -41,6 +47,19 @@ func ExpireUser(email string) {
 }
 
 // CreateRole creates a new role.
-func CreateRole(name string) {
+func CreateRole(name string, file string) error {
 	log.Info("CreateRole", log.AppMsg, map[string]interface{}{"role_name": name})
+	c, err := NewConfig(file)
+	if err != nil {
+		return err
+	}
+	r, err := NewRole(name)
+	if err != nil {
+		return err
+	}
+	if err := c.WriteRole(r); err != nil {
+		return err
+	}
+	log.Info("CreateRole", log.AppMsg, map[string]interface{}{"role_name": name, "result": "success", "message": name + " has been created"})
+	return nil
 }
