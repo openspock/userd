@@ -9,7 +9,7 @@ import (
 )
 
 // CreateUser creates a new user.
-func CreateUser(email string, password string, description string, file string) error {
+func CreateUser(email string, password string, description string, roleID string, file string) error {
 	log.Info("CreateUser", log.AppMsg, map[string]interface{}{"email": email, "description": description})
 	b := make([]byte, 8)
 	_, err := rand.Read(b)
@@ -26,7 +26,7 @@ func CreateUser(email string, password string, description string, file string) 
 	if err != nil {
 		return err
 	}
-	u, err := NewUser(email, description, string(secretBytes), saltStr)
+	u, err := NewUser(email, description, string(secretBytes), saltStr, roleID)
 	if err != nil {
 		return err
 	}

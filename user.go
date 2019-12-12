@@ -42,6 +42,7 @@ type User struct {
 	Email       string
 	Description string
 	Since       time.Time
+	RoleID      string
 }
 
 func (u User) String() string {
@@ -49,7 +50,10 @@ func (u User) String() string {
 }
 
 // NewUser creates a new user and stores it in user conf.
-func NewUser(email string, description string, secret string, salt string) (*User, error) {
+func NewUser(email string, description string, secret string, salt string, roleID string) (*User, error) {
+	if _, ok := RoleTable[roleID]; !ok {
+		return nil, errors.New(roleID + " does not exist")
+	}
 	for k := range UserTable {
 		if email == k {
 			return nil, errors.New(email + " already exists")
@@ -59,7 +63,7 @@ func NewUser(email string, description string, secret string, salt string) (*Use
 	if err != nil {
 		return nil, err
 	}
-	u := User{UserID: uuid.String(), secret: secret, Salt: salt, Email: email, Description: description, Since: time.Now()}
+	u := User{UserID: uuid.String(), secret: secret, Salt: salt, Email: email, Description: description, Since: time.Now(), RoleID: roleID}
 	return &u, nil
 }
 
@@ -188,7 +192,7 @@ func parseUser(record []string) (interface{}, string, error) {
 	if err != nil {
 		return User{}, "", err
 	}
-	u := User{record[0], record[1], record[2], record[3], record[4], createdTime}
+	u := User{record[0], record[1], record[2], record[3], record[4], createdTime, record[6]}
 	return u, u.Email, nil
 }
 
