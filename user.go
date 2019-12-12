@@ -9,6 +9,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // AccessPermissions is a enumeration constant for resource access permissions.
@@ -40,6 +42,25 @@ type User struct {
 	Email       string
 	Description string
 	Since       time.Time
+}
+
+func (u User) String() string {
+	return u.Email
+}
+
+// NewUser creates a new user and stores it in user conf.
+func NewUser(email string, description string, secret string, salt string) (*User, error) {
+	for k := range UserTable {
+		if email == k {
+			return nil, errors.New(email + " already exists")
+		}
+	}
+	uuid, err := uuid.NewRandom()
+	if err != nil {
+		return nil, err
+	}
+	u := User{UserID: uuid.String(), secret: secret, Salt: salt, Email: email, Description: description, Since: time.Now()}
+	return &u, nil
 }
 
 // FilePermission represents permissions per file/ resource, per user.
@@ -90,8 +111,72 @@ func NewConfig(file string) (*Configuration, error) {
 		return nil, errors.New("unknown protocol")
 	}
 	c := Configuration{p[1], protocol}
-	c.Init()
+	c.InitRead()
 	return &c, nil
+}
+
+func (c *Configuration) userConfFileName() string {
+	return c.Location + "/user.conf"
+}
+
+func (c *Configuration) roleConfFileName() string {
+	return c.Location + "/role.conf"
+}
+
+func (c *Configuration) filePermissionFileName() string {
+	return c.Location + "/filepermission.conf"
+}
+
+// InitRead initializes userd configuration.
+//
+// 1. init user conf
+// 2. int fperm conf
+func (c *Configuration) InitRead() error {
+	err := c.initExisting(c.userConfFileName(), parseUser, userTableInsert)
+	err = c.initExisting(c.roleConfFileName(), parseRoles, roleTableInsert)
+	err = c.initExisting(c.filePermissionFileName(), parseFilePermission, filePermissionTableInsert)
+	return err
+}
+
+func (c *Configuration) initExisting(file string, handler parseRecord, insertIntoTable tableInsert) error {
+	config, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	r := csv.NewReader(config)
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		u, key, err := handler(record)
+		if err != nil {
+			return err
+		}
+		insertIntoTable(key, u)
+	}
+	return nil
+}
+
+// WriteUser writes a user to the user conf file.
+func (c *Configuration) WriteUser(u *User) error {
+	f, err := os.OpenFile(c.userConfFileName(), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	w := csv.NewWriter(f)
+	if err := w.Write([]string{u.UserID, u.secret, u.Salt, u.Email, u.Description, u.Since.Format(time.RFC3339)}); err != nil {
+		return err
+	}
+	w.Flush()
+	if err := w.Error(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // parsing logic for User, FilePermission and Role
@@ -153,40 +238,6 @@ func filePermissionTableInsert(key string, val interface{}) {
 			FilePermissionTable[key][fp.File] = fps
 		}
 	}
-}
-
-// Init initializes userd configuration.
-//
-// 1. init user conf
-// 2. int fperm conf
-func (c *Configuration) Init() error {
-	err := c.initFile(c.Location+"/user.conf", parseUser, userTableInsert)
-	err = c.initFile(c.Location+"/role.conf", parseRoles, roleTableInsert)
-	err = c.initFile(c.Location+"/filepermission.conf", parseFilePermission, filePermissionTableInsert)
-	return err
-}
-
-func (c *Configuration) initFile(file string, handler parseRecord, insertIntoTable tableInsert) error {
-	config, err := os.Open(file)
-	if err != nil {
-		return err
-	}
-	r := csv.NewReader(config)
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-		u, key, err := handler(record)
-		if err != nil {
-			return err
-		}
-		insertIntoTable(key, u)
-	}
-	return nil
 }
 
 // UserTable is a map of user email to User
