@@ -53,6 +53,7 @@ type User struct {
 	UserID      string
 	secret      string
 	Salt        string
+	hash        string
 	Email       string
 	Description string
 	Since       time.Time
@@ -64,7 +65,7 @@ func (u User) String() string {
 }
 
 // NewUser creates a new user and stores it in user conf.
-func NewUser(email string, description string, secret string, salt string, roleID string) (*User, error) {
+func NewUser(email, description, secret, salt, hash, roleID string) (*User, error) {
 	if _, ok := RoleTable[roleID]; !ok {
 		return nil, errors.New(roleID + " does not exist")
 	}
@@ -77,7 +78,7 @@ func NewUser(email string, description string, secret string, salt string, roleI
 	if err != nil {
 		return nil, err
 	}
-	u := User{UserID: uuid.String(), secret: secret, Salt: salt, Email: email, Description: description, Since: time.Now(), RoleID: roleID}
+	u := User{UserID: uuid.String(), secret: secret, Salt: salt, hash: hash, Email: email, Description: description, Since: time.Now(), RoleID: roleID}
 	return &u, nil
 }
 
@@ -181,7 +182,7 @@ func (c *Configuration) initExisting(file string, handler parseRecord, insertInt
 
 // WriteUser writes a user to the user conf file.
 func (c *Configuration) WriteUser(u *User) error {
-	return c.write(c.userConfFileName(), []string{u.UserID, u.secret, u.Salt, u.Email, u.Description, u.Since.Format(time.RFC3339)})
+	return c.write(c.userConfFileName(), []string{u.UserID, u.secret, u.Salt, u.hash, u.Email, u.Description, u.Since.Format(time.RFC3339), u.RoleID})
 }
 
 // WriteRole writes a role to the role conf file.
@@ -211,11 +212,11 @@ func (c *Configuration) write(file string, entry []string) error {
 type parseRecord func([]string) (interface{}, string, error)
 
 func parseUser(record []string) (interface{}, string, error) {
-	createdTime, err := time.Parse(time.RFC3339, record[5])
+	createdTime, err := time.Parse(time.RFC3339, record[6])
 	if err != nil {
 		return User{}, "", err
 	}
-	u := User{record[0], record[1], record[2], record[3], record[4], createdTime, record[6]}
+	u := User{record[0], record[1], record[2], record[3], record[4], record[5], createdTime, record[7]}
 	return u, u.Email, nil
 }
 

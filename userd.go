@@ -3,6 +3,7 @@ package userd
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 
 	"github.com/openspock/crypto/hashes"
 	"github.com/openspock/log"
@@ -11,8 +12,12 @@ import (
 // CreateUser creates a new user.
 func CreateUser(email string, password string, description string, roleID string, file string) error {
 	log.Info("CreateUser", log.AppMsg, map[string]interface{}{"email": email, "description": description})
+	c, err := NewConfig(file)
+	if err != nil {
+		return err
+	}
 	b := make([]byte, 8)
-	_, err := rand.Read(b)
+	_, err = rand.Read(b)
 	if err != nil {
 		return err
 	}
@@ -26,11 +31,7 @@ func CreateUser(email string, password string, description string, roleID string
 	if err != nil {
 		return err
 	}
-	u, err := NewUser(email, description, string(secretBytes), saltStr, roleID)
-	if err != nil {
-		return err
-	}
-	c, err := NewConfig(file)
+	u, err := NewUser(email, description, string(b), saltStr, string(secretBytes), roleID)
 	if err != nil {
 		return err
 	}
@@ -61,5 +62,31 @@ func CreateRole(name string, file string) error {
 		return err
 	}
 	log.Info("CreateRole", log.AppMsg, map[string]interface{}{"role_name": name, "result": "success", "message": name + " has been created"})
+	return nil
+}
+
+// Authenticate authenticates a user's credentials for access to the system.
+func Authenticate(email, password, file string) error {
+	log.Info("Authenticate", log.AppMsg, map[string]interface{}{"email": email})
+
+	if _, err := NewConfig(file); err != nil {
+		return err
+	}
+
+	v, ok := UserTable[email]
+	if !ok {
+		return errors.New(email + " does not exist")
+	}
+
+	h, err := hashes.CalculateHmacSha256([]byte(password+v.Salt), []byte(v.secret))
+	if err != nil {
+		return err
+	}
+	if string(h) != v.hash {
+		return errors.New("password does not match")
+	}
+
+	log.Info("Authenticate", log.AppMsg, map[string]interface{}{"email": email, "result": "success", "message": "user successfully authenticated"})
+
 	return nil
 }

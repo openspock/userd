@@ -10,6 +10,14 @@ func TestCreateUser(t *testing.T) {
 	}
 }
 
+func TestAuthenticateUser(t *testing.T) {
+	err := Authenticate("testing@email.org", "whyilovewritingunittests", "file://./config/sample")
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+}
+
 func TestCreateRoleShouldFailForExistingRole(t *testing.T) {
 	if err := CreateRole("admin", "file://./config/sample"); err == nil {
 		t.Errorf("CreateRole should fail for an existing role")
