@@ -11,3 +11,7 @@
 * `create_user` - creates new user.
 * `create_role` - creates new role.
 * `assign_fp` - assign file permissions to a user.
+
+## who can invoke these lifecycle functions
+
+A default `admin` `user` is created with an initial installation of `userd`. Each `read` and/ or `write` interaction with `userd` will require admin credentials. 
