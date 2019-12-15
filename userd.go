@@ -10,7 +10,7 @@ import (
 )
 
 // CreateUser creates a new user.
-func CreateUser(email string, password string, description string, roleID string, file string) error {
+func CreateUser(email, password, description, roleID, file string) error {
 	log.Info("CreateUser", log.AppMsg, map[string]interface{}{"email": email, "description": description})
 	c, err := NewConfig(file)
 	if err != nil {
@@ -48,7 +48,7 @@ func ExpireUser(email string) {
 }
 
 // CreateRole creates a new role.
-func CreateRole(name string, file string) error {
+func CreateRole(name, file string) error {
 	log.Info("CreateRole", log.AppMsg, map[string]interface{}{"role_name": name})
 	c, err := NewConfig(file)
 	if err != nil {
