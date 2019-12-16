@@ -95,3 +95,13 @@ func Authenticate(email, password, file string) error {
 
 	return nil
 }
+
+// GetRoleIDFor returns the RoleID for a RoleName
+func GetRoleIDFor(name string) (string, error) {
+	for _, v := range RoleTable {
+		if v.Name == name {
+			return v.RoleID, nil
+		}
+	}
+	return "", errors.New("Role not found for name " + name)
+}

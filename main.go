@@ -115,6 +115,29 @@ func handleFirstTime() {
 	fmt.Println("Please type <userd -help> to get a list of options.")
 }
 
+func createUser() {
+	if email == "" {
+		handleError("email is required")
+	}
+	if password == "" {
+		handleError("password is required")
+	}
+	if description == "" {
+		handleError("A description for this user is required")
+	}
+
+	roleID, err := user.GetRoleIDFor(roleName)
+	if err != nil {
+		handleError(err)
+	}
+
+	if err := user.CreateUser(email, password, description, roleID, location, adminEmail, adminPwd); err != nil {
+		handleError(err)
+	}
+
+	fmt.Println("User created successfully!")
+}
+
 func createRole() {
 	if roleName == "" {
 		handleError("roleName is required")
@@ -135,6 +158,8 @@ func handleOp() {
 	switch op {
 	case "create_role":
 		createRole()
+	case "create_user":
+		createUser()
 	default:
 		handleError("This op is not supported!")
 	}
