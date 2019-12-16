@@ -1,4 +1,4 @@
-package userd
+package user
 
 import (
 	"crypto/rand"
@@ -10,7 +10,7 @@ import (
 )
 
 // CreateUser creates a new user.
-func CreateUser(email, password, description, roleID, file string) error {
+func CreateUser(email, password, description, roleID, file, adminUsr, adminPwd string) error {
 	log.Info("CreateUser", log.AppMsg, map[string]interface{}{"email": email, "description": description})
 	c, err := NewConfig(file)
 	if err != nil {

@@ -1,6 +1,6 @@
-// Package userd contains structures and functions to manage users, their roles
+// Package user contains structures and functions to manage users, their roles
 // and permissions.
-package userd
+package user
 
 import (
 	"encoding/csv"
