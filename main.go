@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
-	log "github.com/openspock/log"
 	config "github.com/openspock/userd/config"
 	user "github.com/openspock/userd/user"
 )
@@ -62,7 +62,6 @@ func validateMandatory() {
 func handleLocation() {
 	if location == "" {
 		location = config.GetDefaultLocation()
-		log.Info("using default location as location is not passed", log.AppLog, map[string]interface{}{"location": location})
 		_, err := user.NewConfig(location)
 		handleError(err)
 		if len(user.UserTable) == 0 && adminEmail == "" {
@@ -91,10 +90,28 @@ func main() {
 
 	if adminEmail == nilCredentials {
 		// uninitialized userd
-		log.Info(`It seems like you are using userd for the`+
-			`first time or have never initialized it for - `+location,
-			log.AppLog,
-			map[string]interface{}{"location": location})
+		fmt.Println(`It seems like you are using userd for the` +
+			`first time or have never initialized it for - ` + strings.Split(location, "://")[1])
+
+		fmt.Println("Would you like to initialize userd at this location? [y|n]")
+		var answer rune
+		if _, err := fmt.Scanf("%c\n", &answer); err != nil {
+			handleError(err)
+		}
+		if answer != 'y' {
+			fmt.Println("Please enter the location where you'll like to initialize userd. Press Ctrl|Cmd ^ C to exit the program.")
+			if _, err := fmt.Scanf("%s\n", &location); err != nil {
+				handleError(err)
+			}
+
+			if !strings.HasPrefix(location, "file://") {
+				location = "file://" + location
+			}
+		}
+
+		if err := user.CreateRole("admin", location); err != nil {
+			handleError(err)
+		}
 	} else {
 		// authenticate admin
 		if err := user.Authenticate(adminEmail, adminPwd, location); err != nil {

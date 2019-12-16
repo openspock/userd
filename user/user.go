@@ -130,6 +130,11 @@ func NewConfig(file string) (*Configuration, error) {
 		return nil, errors.New("unknown protocol")
 	}
 	c := Configuration{p[1], protocol}
+
+	if _, err := os.Stat(c.Location); os.IsNotExist(err) {
+		os.Mkdir(c.Location, os.ModeDir)
+	}
+
 	c.InitRead()
 	return &c, nil
 }
