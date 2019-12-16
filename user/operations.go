@@ -12,6 +12,11 @@ import (
 // CreateUser creates a new user.
 func CreateUser(email, password, description, roleID, file, adminUsr, adminPwd string) error {
 	log.Info("CreateUser", log.AppMsg, map[string]interface{}{"email": email, "description": description})
+
+	if adminUsr != "init" {
+		Authenticate(adminUsr, adminPwd, file)
+	}
+
 	c, err := NewConfig(file)
 	if err != nil {
 		return err
@@ -48,21 +53,21 @@ func ExpireUser(email string) {
 }
 
 // CreateRole creates a new role.
-func CreateRole(name, file string) error {
+func CreateRole(name, file string) (*Role, error) {
 	log.Info("CreateRole", log.AppMsg, map[string]interface{}{"role_name": name})
 	c, err := NewConfig(file)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	r, err := NewRole(name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if err := c.WriteRole(r); err != nil {
-		return err
+		return nil, err
 	}
 	log.Info("CreateRole", log.AppMsg, map[string]interface{}{"role_name": name, "result": "success", "message": name + " has been created"})
-	return nil
+	return r, nil
 }
 
 // Authenticate authenticates a user's credentials for access to the system.

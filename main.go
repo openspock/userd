@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/openspock/log"
 	config "github.com/openspock/userd/config"
 	user "github.com/openspock/userd/user"
 )
@@ -32,7 +33,7 @@ func init() {
 	flag.StringVar(&adminPwd, "admin-password", "", "Admin password * mandatory")
 	flag.StringVar(&description, "description", "", "User description")
 	flag.StringVar(&roleName, "role", "", "Role name")
-	flag.StringVar(&location, "location", "", "Userd location - mandatory - this is the location of your userd config and data files. By default, this is C:\\Userd in windows and /etc/userd in *nix systems")
+	flag.StringVar(&location, "location", "", "Userd location * mandatory - this is the location of your userd config and data files. By default, this is C:\\Userd in windows and /etc/userd in *nix systems")
 	flag.BoolVar(&help, "help", false, "Prints help")
 }
 
@@ -89,6 +90,7 @@ func main() {
 	parse()
 
 	if adminEmail == nilCredentials {
+		log.Disabled = true
 		// uninitialized userd
 		fmt.Println(`It seems like you are using userd for the` +
 			`first time or have never initialized it for - ` + strings.Split(location, "://")[1])
@@ -109,9 +111,25 @@ func main() {
 			}
 		}
 
-		if err := user.CreateRole("admin", location); err != nil {
+		role, err := user.CreateRole("admin", location)
+		if err != nil {
 			handleError(err)
 		}
+
+		fmt.Println("Great! We've initialized userd at this location. Next, let's setup an admin user.")
+		fmt.Println("We use emails as userid. Please enter an email you'd like to use as your username.")
+		fmt.Println("We promise not to send unnecessary spam! :) ")
+		fmt.Print("email: ")
+		fmt.Scanln(&adminEmail)
+		fmt.Print("password: ")
+		fmt.Scanln(&adminPwd)
+
+		if err := user.CreateUser(adminEmail, adminPwd, "Userd admin", role.RoleID, location, "init", "init"); err != nil {
+			handleError(err)
+		}
+		fmt.Println("You're all set up and ready to go.")
+		fmt.Println()
+		fmt.Println("Please type <userd -help> to get a list of options.")
 	} else {
 		// authenticate admin
 		if err := user.Authenticate(adminEmail, adminPwd, location); err != nil {

@@ -19,14 +19,14 @@ func TestAuthenticateUser(t *testing.T) {
 }
 
 func TestCreateRoleShouldFailForExistingRole(t *testing.T) {
-	if err := CreateRole("admin", "file://./config/sample"); err == nil {
+	if _, err := CreateRole("admin", "file://./config/sample"); err == nil {
 		t.Errorf("CreateRole should fail for an existing role")
 		t.FailNow()
 	}
 }
 
 func TestCreateRoleForNonExistingRole(t *testing.T) {
-	if err := CreateRole("api", "file://./config/sample"); err != nil {
+	if _, err := CreateRole("api", "file://./config/sample"); err != nil {
 		t.Errorf("CreateRole should fail for an existing role")
 		t.FailNow()
 	}
