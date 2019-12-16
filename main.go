@@ -72,6 +72,49 @@ func handleLocation() {
 	}
 }
 
+func handleFirstTime() {
+	log.Disabled = true
+	// uninitialized userd
+	fmt.Println(`It seems like you are using userd for the` +
+		`first time or have never initialized it for - ` + strings.Split(location, "://")[1])
+	fmt.Println("Please type <userd -help> if you think this message does not make sense.")
+	fmt.Println("Would you like to initialize userd at this location? [y|n]")
+	var answer rune
+	if _, err := fmt.Scanf("%c\n", &answer); err != nil {
+		handleError(err)
+	}
+	if answer != 'y' {
+		fmt.Println("Please enter the location where you'll like to initialize userd. Press Ctrl|Cmd ^ C to exit the program.")
+		if _, err := fmt.Scanf("%s\n", &location); err != nil {
+			handleError(err)
+		}
+
+		if !strings.HasPrefix(location, "file://") {
+			location = "file://" + location
+		}
+	}
+
+	role, err := user.CreateRole("admin", location)
+	if err != nil {
+		handleError(err)
+	}
+
+	fmt.Println("Great! We've initialized userd at this location. Next, let's setup an admin user.")
+	fmt.Println("We use emails as userid. Please enter an email you'd like to use as your username.")
+	fmt.Println("We promise not to send unnecessary spam! :) ")
+	fmt.Print("email: ")
+	fmt.Scanln(&adminEmail)
+	fmt.Print("password: ")
+	fmt.Scanln(&adminPwd)
+
+	if err := user.CreateUser(adminEmail, adminPwd, "Userd admin", role.RoleID, location, "init", "init"); err != nil {
+		handleError(err)
+	}
+	fmt.Println("You're all set up and ready to go.")
+	fmt.Println()
+	fmt.Println("Please type <userd -help> to get a list of options.")
+}
+
 // parse parses and handles all flags passed to userd
 func parse() {
 	flag.Parse()
@@ -90,46 +133,7 @@ func main() {
 	parse()
 
 	if adminEmail == nilCredentials {
-		log.Disabled = true
-		// uninitialized userd
-		fmt.Println(`It seems like you are using userd for the` +
-			`first time or have never initialized it for - ` + strings.Split(location, "://")[1])
-
-		fmt.Println("Would you like to initialize userd at this location? [y|n]")
-		var answer rune
-		if _, err := fmt.Scanf("%c\n", &answer); err != nil {
-			handleError(err)
-		}
-		if answer != 'y' {
-			fmt.Println("Please enter the location where you'll like to initialize userd. Press Ctrl|Cmd ^ C to exit the program.")
-			if _, err := fmt.Scanf("%s\n", &location); err != nil {
-				handleError(err)
-			}
-
-			if !strings.HasPrefix(location, "file://") {
-				location = "file://" + location
-			}
-		}
-
-		role, err := user.CreateRole("admin", location)
-		if err != nil {
-			handleError(err)
-		}
-
-		fmt.Println("Great! We've initialized userd at this location. Next, let's setup an admin user.")
-		fmt.Println("We use emails as userid. Please enter an email you'd like to use as your username.")
-		fmt.Println("We promise not to send unnecessary spam! :) ")
-		fmt.Print("email: ")
-		fmt.Scanln(&adminEmail)
-		fmt.Print("password: ")
-		fmt.Scanln(&adminPwd)
-
-		if err := user.CreateUser(adminEmail, adminPwd, "Userd admin", role.RoleID, location, "init", "init"); err != nil {
-			handleError(err)
-		}
-		fmt.Println("You're all set up and ready to go.")
-		fmt.Println()
-		fmt.Println("Please type <userd -help> to get a list of options.")
+		handleFirstTime()
 	} else {
 		// authenticate admin
 		if err := user.Authenticate(adminEmail, adminPwd, location); err != nil {
