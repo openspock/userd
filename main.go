@@ -24,6 +24,7 @@ var location string
 var help bool
 var adminEmail string
 var adminPwd string
+var verbose bool
 
 func init() {
 	flag.StringVar(&op, "op", "", "Userd operation\n\t* create_user\n\t* create_role\n\t* assign_fp (assign file permissions)")
@@ -35,6 +36,7 @@ func init() {
 	flag.StringVar(&roleName, "role", "", "Role name")
 	flag.StringVar(&location, "location", "", "Userd location * mandatory - this is the location of your userd config and data files. By default, this is C:\\Userd in windows and /etc/userd in *nix systems")
 	flag.BoolVar(&help, "help", false, "Prints help")
+	flag.BoolVar(&verbose, "verbose", false, "Print verbose logging information")
 }
 
 func printHelp() {
@@ -172,6 +174,10 @@ func parse() {
 	if help {
 		printHelp()
 		os.Exit(0)
+	}
+
+	if !verbose {
+		log.Disabled = true
 	}
 
 	handleLocation()
