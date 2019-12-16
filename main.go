@@ -32,7 +32,7 @@ func init() {
 	flag.StringVar(&password, "password", "", "User password")
 	flag.StringVar(&adminEmail, "admin-email", "", "Admin email * mandatory")
 	flag.StringVar(&adminPwd, "admin-password", "", "Admin password * mandatory")
-	flag.StringVar(&description, "description", "", "User description")
+	flag.StringVar(&description, "description", "", "User description - please enter a string in quotes")
 	flag.StringVar(&roleName, "role", "", "Role name")
 	flag.StringVar(&location, "location", "", "Userd location * mandatory - this is the location of your userd config and data files. By default, this is C:\\Userd in windows and /etc/userd in *nix systems")
 	flag.BoolVar(&help, "help", false, "Prints help")
