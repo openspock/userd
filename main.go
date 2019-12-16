@@ -26,7 +26,7 @@ var adminEmail string
 var adminPwd string
 
 func init() {
-	flag.StringVar(&op, "op", "", "Userd operation")
+	flag.StringVar(&op, "op", "", "Userd operation\n\t* create_user\n\t* create_role\n\t* assign_fp (assign file permissions)")
 	flag.StringVar(&email, "email", "", "User email")
 	flag.StringVar(&password, "password", "", "User password")
 	flag.StringVar(&adminEmail, "admin-email", "", "Admin email * mandatory")
@@ -70,6 +70,10 @@ func handleLocation() {
 			adminPwd = string(nilCredentials)
 		}
 	}
+
+	if !strings.HasPrefix(location, "file://") {
+		location = "file://" + location
+	}
 }
 
 func handleFirstTime() {
@@ -87,10 +91,6 @@ func handleFirstTime() {
 		fmt.Println("Please enter the location where you'll like to initialize userd. Press Ctrl|Cmd ^ C to exit the program.")
 		if _, err := fmt.Scanf("%s\n", &location); err != nil {
 			handleError(err)
-		}
-
-		if !strings.HasPrefix(location, "file://") {
-			location = "file://" + location
 		}
 	}
 
@@ -113,6 +113,31 @@ func handleFirstTime() {
 	fmt.Println("You're all set up and ready to go.")
 	fmt.Println()
 	fmt.Println("Please type <userd -help> to get a list of options.")
+}
+
+func createRole() {
+	if roleName == "" {
+		handleError("roleName is required")
+	}
+	role, err := user.CreateRole(roleName, location)
+	if err != nil {
+		handleError(err)
+	}
+	fmt.Println("Role " + roleName + " created successfully with id: " + role.RoleID)
+}
+
+func handleOp() {
+	if op == "" {
+		fmt.Println("op is a mandatory parameter. Select one of the options specified for op.")
+		handleError("op is mandatory")
+	}
+
+	switch op {
+	case "create_role":
+		createRole()
+	default:
+		handleError("This op is not supported!")
+	}
 }
 
 // parse parses and handles all flags passed to userd
@@ -139,6 +164,8 @@ func main() {
 		if err := user.Authenticate(adminEmail, adminPwd, location); err != nil {
 			handleError(err)
 		}
+
+		handleOp()
 	}
 
 }
