@@ -122,6 +122,8 @@ func Authenticate(email, password, file string) error {
 
 // Authorize authorizes acccess to a resource.
 func Authorize(email, password, file, resource string) error {
+	log.Info("Authorize", log.AppMsg, map[string]interface{}{"email": email})
+
 	if err := Authenticate(email, password, file); err != nil {
 		return err
 	}
@@ -155,6 +157,8 @@ func Authorize(email, password, file, resource string) error {
 	if !isExpirationOk {
 		return errors.New("file permission expired")
 	}
+
+	log.Info("Authorize", log.AppMsg, map[string]interface{}{"email": email, "result": "success", "message": "user successfully authorized", "resource": resource})
 
 	return nil
 }
