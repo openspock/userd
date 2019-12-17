@@ -88,7 +88,7 @@ func getExpirationDate() time.Time {
 		handleError(err)
 	}
 
-	return date
+	return time.Date(date.Year(), date.Month(), date.Day(), 23, 59, 59, 0, date.Location())
 }
 
 func handleLocation() {
