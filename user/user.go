@@ -251,7 +251,7 @@ func parseFilePermission(record []string) (interface{}, string, error) {
 		return FilePermission{}, "", err
 	}
 	role := RoleTable[record[2]]
-	return FilePermission{record[0], record[1], role, assignment, expiration}, record[0], nil
+	return FilePermission{record[0], record[1], role, assignment, expiration}, record[1], nil
 }
 
 // table insertion logic handlers

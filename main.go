@@ -30,7 +30,7 @@ var resource string
 var expiration string
 
 func init() {
-	flag.StringVar(&op, "op", "", "Userd operation\n\t* create_user\n\t* create_role\n\t* assign_fp (assign file permissions)\n\t* list_roles (you will require the uuid when creating a user)")
+	flag.StringVar(&op, "op", "", "Userd operation\n\t* create_user\n\t* create_role\n\t* assign_fp (assign file permissions)\n\t* list_roles (you will require the uuid when creating a user)\n\t* is_authorized (check if user is authorized to access resource/file)")
 	flag.StringVar(&email, "email", "", "User email")
 	flag.StringVar(&password, "password", "", "User password")
 	flag.StringVar(&adminEmail, "admin-email", "", "Admin email * mandatory")
@@ -62,7 +62,7 @@ func handleError(msg interface{}) {
 }
 
 func validateMandatory() {
-	if adminEmail == "" || adminPwd == "" {
+	if op != "is_authorized" && (adminEmail == "" || adminPwd == "") {
 		handleError("Admin email(user) and password are mandatory")
 	}
 }
@@ -214,6 +214,20 @@ func assignFP() {
 	}
 }
 
+func isAuthorized() {
+	if email == "" || password == "" {
+		handleError("credentials are missing")
+	}
+
+	if resource == "" {
+		handleError("resource is required")
+	}
+
+	if err := user.Authorize(email, password, location, resource); err != nil {
+		handleError(err)
+	}
+}
+
 func handleOp() {
 	if op == "" {
 		fmt.Println("op is a mandatory parameter. Select one of the options specified for op.")
@@ -229,6 +243,8 @@ func handleOp() {
 		listRoles()
 	case "assign_fp":
 		assignFP()
+	case "is_authorized":
+		isAuthorized()
 	default:
 		handleError("This op is not supported!")
 	}
@@ -259,8 +275,11 @@ func main() {
 		handleFirstTime()
 	} else {
 		// authenticate admin
-		if err := user.Authenticate(adminEmail, adminPwd, location); err != nil {
-			handleError(err)
+
+		if op != "is_authorized" {
+			if err := user.Authenticate(adminEmail, adminPwd, location); err != nil {
+				handleError(err)
+			}
 		}
 
 		handleOp()

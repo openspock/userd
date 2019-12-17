@@ -120,6 +120,30 @@ func Authenticate(email, password, file string) error {
 	return nil
 }
 
+// Authorize authorizes acccess to a resource.
+func Authorize(email, password, file, resource string) error {
+	if err := Authenticate(email, password, file); err != nil {
+		return err
+	}
+
+	u := UserTable[email]
+	var fps []FilePermission
+	var ok bool
+	fps, ok = FilePermissionTable[u.UserID][resource]
+
+	if !ok {
+		return errors.New(resource + " permission does not exist for " + email)
+	}
+
+	for _, fp := range fps {
+		if time.Now().After(fp.Expiration) {
+			return errors.New("file permission expired on " + fp.Expiration.Format(time.RFC3339))
+		}
+	}
+
+	return nil
+}
+
 // GetRoleIDFor returns the RoleID for a RoleName
 func GetRoleIDFor(name string) (string, error) {
 	for _, v := range RoleTable {
