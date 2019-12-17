@@ -132,13 +132,28 @@ func Authorize(email, password, file, resource string) error {
 	fps, ok = FilePermissionTable[u.UserID][resource]
 
 	if !ok {
-		return errors.New(resource + " permission does not exist for " + email)
+		// check for role specific perms
+		fps, ok = FilePermissionTable[""][resource]
+		if !ok {
+			return errors.New(resource + " permission does not exist for " + email)
+		}
+	}
+	var isRoleOk bool = false
+	var isExpirationOk bool = false
+	for _, fp := range fps {
+		if !isRoleOk && fp.Role.RoleID == u.RoleID {
+			isRoleOk = true
+		}
+		if time.Now().Before(fp.Expiration) {
+			isExpirationOk = true
+		}
 	}
 
-	for _, fp := range fps {
-		if time.Now().After(fp.Expiration) {
-			return errors.New("file permission expired on " + fp.Expiration.Format(time.RFC3339))
-		}
+	if !isRoleOk {
+		return errors.New("user does not have required role")
+	}
+	if !isExpirationOk {
+		return errors.New("file permission expired")
 	}
 
 	return nil
