@@ -151,6 +151,15 @@ func createRole() {
 	fmt.Println("Role " + roleName + " created successfully with id: " + role.RoleID)
 }
 
+func listRoles() {
+	if log.Disabled {
+		for _, v := range user.ListRoles() {
+			fmt.Printf("%s : %s \n", v.(user.Role).RoleID, v.(user.Role).Name)
+		}
+	}
+	log.Info("All available roles", log.AppMsg, user.ListRoles())
+}
+
 func handleOp() {
 	if op == "" {
 		fmt.Println("op is a mandatory parameter. Select one of the options specified for op.")
@@ -162,6 +171,8 @@ func handleOp() {
 		createRole()
 	case "create_user":
 		createUser()
+	case "list_roles":
+		listRoles()
 	default:
 		handleError("This op is not supported!")
 	}

@@ -105,3 +105,14 @@ func GetRoleIDFor(name string) (string, error) {
 	}
 	return "", errors.New("Role not found for name " + name)
 }
+
+// ListRoles lists all available roles.
+func ListRoles() map[string]interface{} {
+	m := make(map[string]interface{})
+
+	for k, v := range RoleTable {
+		m[k] = v
+	}
+
+	return m
+}
