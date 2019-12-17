@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"time"
 
 	"github.com/openspock/crypto/hashes"
 	"github.com/openspock/log"
@@ -68,6 +69,29 @@ func CreateRole(name, file string) (*Role, error) {
 	}
 	log.Info("CreateRole", log.AppMsg, map[string]interface{}{"role_name": name, "result": "success", "message": name + " has been created"})
 	return r, nil
+}
+
+// CreateFP creates a new file permission for either a user or a role.
+func CreateFP(file string, user *User, role *Role, expiration time.Time, location string) (*FilePermission, error) {
+	log.Info("CreateFP", log.AppMsg, map[string]interface{}{"file": file})
+
+	c, err := NewConfig(location)
+	if err != nil {
+		return nil, err
+	}
+
+	fp, err := NewFP(file, *user, *role, expiration)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := c.WriteFP(fp); err != nil {
+		return nil, err
+	}
+
+	log.Info("CreateFP", log.AppMsg, map[string]interface{}{"file": file, "result": "success", "message": "Permission for " + file + " has been created"})
+
+	return fp, nil
 }
 
 // Authenticate authenticates a user's credentials for access to the system.

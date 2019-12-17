@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/openspock/log"
 	config "github.com/openspock/userd/config"
@@ -25,9 +26,11 @@ var help bool
 var adminEmail string
 var adminPwd string
 var verbose bool
+var resource string
+var expiration string
 
 func init() {
-	flag.StringVar(&op, "op", "", "Userd operation\n\t* create_user\n\t* create_role\n\t* assign_fp (assign file permissions)")
+	flag.StringVar(&op, "op", "", "Userd operation\n\t* create_user\n\t* create_role\n\t* assign_fp (assign file permissions)\n\t* list_roles (you will require the uuid when creating a user)")
 	flag.StringVar(&email, "email", "", "User email")
 	flag.StringVar(&password, "password", "", "User password")
 	flag.StringVar(&adminEmail, "admin-email", "", "Admin email * mandatory")
@@ -37,6 +40,8 @@ func init() {
 	flag.StringVar(&location, "location", "", "Userd location * mandatory - this is the location of your userd config and data files. By default, this is C:\\Userd in windows and /etc/userd in *nix systems")
 	flag.BoolVar(&help, "help", false, "Prints help")
 	flag.BoolVar(&verbose, "verbose", false, "Print verbose logging information")
+	flag.StringVar(&resource, "resource", "", "File URL to provide access to either a user email or role. If both are provided, role will be ignored.")
+	flag.StringVar(&expiration, "expiration", "", "expiration date in yyyy-MM-dd format")
 }
 
 func printHelp() {
@@ -60,6 +65,30 @@ func validateMandatory() {
 	if adminEmail == "" || adminPwd == "" {
 		handleError("Admin email(user) and password are mandatory")
 	}
+}
+
+func getRoleID() string {
+	roleID, err := user.GetRoleIDFor(roleName)
+	if err != nil {
+		handleError(err)
+	}
+	return roleID
+}
+
+func getRole() user.Role {
+	return user.RoleTable[getRoleID()]
+}
+
+func getExpirationDate() time.Time {
+	if expiration == "" {
+		handleError("expiration is required in yyyy-MM-dd format")
+	}
+	date, err := time.Parse("2006-01-02", expiration)
+	if err != nil {
+		handleError(err)
+	}
+
+	return date
 }
 
 func handleLocation() {
@@ -128,10 +157,7 @@ func createUser() {
 		handleError("A description for this user is required")
 	}
 
-	roleID, err := user.GetRoleIDFor(roleName)
-	if err != nil {
-		handleError(err)
-	}
+	roleID := getRoleID()
 
 	if err := user.CreateUser(email, password, description, roleID, location, adminEmail, adminPwd); err != nil {
 		handleError(err)
@@ -160,6 +186,34 @@ func listRoles() {
 	log.Info("All available roles", log.AppMsg, user.ListRoles())
 }
 
+func assignFP() {
+	if resource == "" {
+		handleError("resource is required")
+	}
+
+	if email == "" && roleName == "" {
+		handleError("Either email or role name is required")
+	}
+
+	var u user.User
+	var ok bool
+	if email != "" {
+		u, ok = user.UserTable[email]
+		if !ok {
+			handleError(email + " does not exist")
+		}
+	}
+
+	var role user.Role
+	if email == "" {
+		role = getRole()
+	}
+
+	if _, err := user.CreateFP(resource, &u, &role, getExpirationDate(), location); err != nil {
+		handleError(err)
+	}
+}
+
 func handleOp() {
 	if op == "" {
 		fmt.Println("op is a mandatory parameter. Select one of the options specified for op.")
@@ -173,6 +227,8 @@ func handleOp() {
 		createUser()
 	case "list_roles":
 		listRoles()
+	case "assign_fp":
+		assignFP()
 	default:
 		handleError("This op is not supported!")
 	}
@@ -209,5 +265,4 @@ func main() {
 
 		handleOp()
 	}
-
 }

@@ -84,6 +84,8 @@ func NewUser(email, description, secret, salt, hash, roleID string) (*User, erro
 
 // FilePermission represents permissions per file/ resource, per user.
 //
+// Either UserID or Role is mandatory
+//
 // A file or resource can be identified with a URL.
 // Examples -
 // file:/etc/userd/user.conf
@@ -93,9 +95,14 @@ func NewUser(email, description, secret, salt, hash, roleID string) (*User, erro
 type FilePermission struct {
 	File       string
 	UserID     string
-	Roles      Role
+	Role       Role
 	Assignment time.Time
 	Expiration time.Time
+}
+
+// NewFP creates new FilePermission
+func NewFP(file string, user User, role Role, expiration time.Time) (*FilePermission, error) {
+	return &FilePermission{File: file, UserID: user.UserID, Role: role, Assignment: time.Now(), Expiration: expiration}, nil
 }
 
 // Protocol has configuration file access protocol.
@@ -193,6 +200,11 @@ func (c *Configuration) WriteUser(u *User) error {
 // WriteRole writes a role to the role conf file.
 func (c *Configuration) WriteRole(r *Role) error {
 	return c.write(c.roleConfFileName(), []string{r.RoleID, r.Name})
+}
+
+// WriteFP writes a FilePermission to file permission conf file.
+func (c *Configuration) WriteFP(fp *FilePermission) error {
+	return c.write(c.filePermissionFileName(), []string{fp.File, fp.UserID, fp.Role.RoleID, fp.Assignment.Format(time.RFC3339), fp.Expiration.Format(time.RFC3339)})
 }
 
 func (c *Configuration) write(file string, entry []string) error {
