@@ -10,6 +10,22 @@ import (
 	"github.com/openspock/log"
 )
 
+// RoleType helps define the type of a role that can be used by operations to
+// ascertain that only users with certain roles can perform these
+// operations.
+type RoleType int
+
+const (
+	// Disregard role type for this operation
+	Disregard RoleType = iota
+	// Admin role type for this operation
+	Admin
+)
+
+func (t RoleType) String() string {
+	return [...]string{"<nil>", "admin"}[t]
+}
+
 // CreateUser creates a new user.
 func CreateUser(email, password, description, roleID, file, adminUsr, adminPwd string) error {
 	log.Info("CreateUser", log.AppMsg, map[string]interface{}{"email": email, "description": description})
@@ -116,6 +132,19 @@ func Authenticate(email, password, file string) error {
 	}
 
 	log.Info("Authenticate", log.AppMsg, map[string]interface{}{"email": email, "result": "success", "message": "user successfully authenticated"})
+
+	return nil
+}
+
+// AuthenticateForRole authenticates a user's credentials and then validates
+// if the user is of a required role for that operation.
+func AuthenticateForRole(email, password, file string, roleType RoleType) error {
+	if err := Authenticate(email, password, file); err != nil {
+		return err
+	}
+	if roleType.String() != RoleTable[UserTable[email].RoleID].Name {
+		return errors.New("role does not match " + roleType.String())
+	}
 
 	return nil
 }

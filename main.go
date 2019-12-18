@@ -277,7 +277,7 @@ func main() {
 		// authenticate admin
 
 		if op != "is_authorized" { // is_authorized does not require elevated access.
-			if err := user.Authenticate(adminEmail, adminPwd, location); err != nil {
+			if err := user.AuthenticateForRole(adminEmail, adminPwd, location, user.Admin); err != nil {
 				handleError(err)
 			}
 		}
