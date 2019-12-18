@@ -7,11 +7,23 @@
 
 ## userd - lifecycle functions
 
-`userd` defines the following lifecycle functions - 
-* `create_user` - creates new user.
-* `create_role` - creates new role.
-* `assign_fp` - assign file permissions to a user.
+`userd` defines the following commands or operations - 
+* `create_user` - creates new user. This is an elevated operation and requires admin creds.
+* `create_role` - creates new role. This is an elevated operation and requires admin creds.
+* `assign_fp` - assign file permissions to a user. This is an elevated operation and requires admin creds.
+* `list_roles` - list all roles supported.This is an elevated operation and requires admin creds.
+* `is_authorized` - check if a user is authorized to access a resource. 
+* `reset_password` - resets user password, requires user credentials.
+
+## default locations
+
+* `C:\Userd` - Windows
+* `/etc/userd` - *nix systems
+
+## running userd for the first time
+
+`userd` understands if it's being run for the `first time` by checking if configuration and data files are present in the location parameter(default location if it's not passed). When `userd` is run for the first time, it walks the user through setup by creating an `admin` role and then asking the user to setup an `admin` user. 
 
 ## who can invoke these lifecycle functions
 
-A default `admin` `user` is created with an initial installation of `userd`. Each `read` and/ or `write` interaction with `userd` will require admin credentials. 
+Each `write` interaction with `userd` will require admin credentials. Read operations do not require admin credentials but require user credentials. 
