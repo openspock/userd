@@ -38,8 +38,8 @@ func CreateUser(email, password, description, roleID, file, adminUsr, adminPwd s
 	if err != nil {
 		return err
 	}
-	b := make([]byte, 8)
-	_, err = rand.Read(b)
+	secret := make([]byte, 8)
+	_, err = rand.Read(secret)
 	if err != nil {
 		return err
 	}
@@ -49,11 +49,11 @@ func CreateUser(email, password, description, roleID, file, adminUsr, adminPwd s
 		return err
 	}
 	saltStr := base64.StdEncoding.EncodeToString(salt)
-	secretBytes, err := hashes.CalculateHmacSha256([]byte(password+saltStr), b)
+	hash, err := hashes.CalculateHmacSha256([]byte(password+saltStr), secret)
 	if err != nil {
 		return err
 	}
-	u, err := NewUser(email, description, string(b), saltStr, string(secretBytes), roleID)
+	u, err := NewUser(email, description, string(secret), saltStr, string(hash), roleID)
 	if err != nil {
 		return err
 	}
@@ -61,6 +61,40 @@ func CreateUser(email, password, description, roleID, file, adminUsr, adminPwd s
 		return err
 	}
 	log.Info("CreateUser", log.AppMsg, map[string]interface{}{"email": email, "result": "success", "message": email + " has been created successfully"})
+	return nil
+}
+
+// ChangePassword changes the password for a user.
+func ChangePassword(email, password, newPassword, confirmPassword, file string) error {
+	log.Info("ChangePassword", log.AppMsg, map[string]interface{}{"email": email})
+
+	if newPassword != confirmPassword {
+		return errors.New("new and confirm password not the same")
+	}
+
+	c, err := NewConfig(file)
+	if err != nil {
+		return err
+	}
+
+	if err := Authenticate(email, password, file); err != nil {
+		return err
+	}
+
+	u := UserTable[email]
+
+	hash, err := hashes.CalculateHmacSha256([]byte(newPassword+u.Salt), []byte(u.secret))
+	if err != nil {
+		return err
+	}
+	u.hash = string(hash)
+
+	if err := c.WriteUser(&u); err != nil {
+		return err
+	}
+
+	log.Info("ChangePassword", log.AppMsg, map[string]interface{}{"email": email, "result": "success", "message": "password changed successfully for " + email})
+
 	return nil
 }
 

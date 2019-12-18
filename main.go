@@ -28,6 +28,8 @@ var adminPwd string
 var verbose bool
 var resource string
 var expiration string
+var newPassword string
+var confirmPassword string
 
 func init() {
 	flag.StringVar(&op, "op", "", "Userd operation\n\t* create_user\n\t* create_role\n\t* assign_fp (assign file permissions)\n\t* list_roles (you will require the uuid when creating a user)\n\t* is_authorized (check if user is authorized to access resource/file)")
@@ -42,6 +44,8 @@ func init() {
 	flag.BoolVar(&verbose, "verbose", false, "Print verbose logging information")
 	flag.StringVar(&resource, "resource", "", "File URL to provide access to either a user email or role. If both are provided, role will be ignored.")
 	flag.StringVar(&expiration, "expiration", "", "expiration date in yyyy-MM-dd format")
+	flag.StringVar(&newPassword, "new-password", "", "New password")
+	flag.StringVar(&confirmPassword, "confirm-password", "", "Confirm password")
 }
 
 func printHelp() {
@@ -62,8 +66,14 @@ func handleError(msg interface{}) {
 }
 
 func validateMandatory() {
-	if op != "is_authorized" && (adminEmail == "" || adminPwd == "") {
-		handleError("Admin email(user) and password are mandatory")
+	switch op {
+	case "is_authorized":
+	case "change_password":
+		break
+	default:
+		if adminEmail == "" || adminPwd == "" {
+			handleError("Admin email(user) and password are mandatory")
+		}
 	}
 }
 
@@ -228,6 +238,18 @@ func isAuthorized() {
 	}
 }
 
+func changePassword() {
+	if email == "" || password == "" {
+		handleError("email and password are required")
+	}
+
+	if newPassword == "" || confirmPassword == "" {
+		handleError("new-password and confirm-password are required")
+	}
+
+	user.ChangePassword(email, password, newPassword, confirmPassword, location)
+}
+
 func handleOp() {
 	if op == "" {
 		fmt.Println("op is a mandatory parameter. Select one of the options specified for op.")
@@ -245,6 +267,8 @@ func handleOp() {
 		assignFP()
 	case "is_authorized":
 		isAuthorized()
+	case "change_password":
+		changePassword()
 	default:
 		handleError("This op is not supported!")
 	}
@@ -276,7 +300,11 @@ func main() {
 	} else {
 		// authenticate admin
 
-		if op != "is_authorized" { // is_authorized does not require elevated access.
+		switch op {
+		case "change_password":
+		case "is_authorized":
+			break
+		default:
 			if err := user.AuthenticateForRole(adminEmail, adminPwd, location, user.Admin); err != nil {
 				handleError(err)
 			}

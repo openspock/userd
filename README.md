@@ -13,7 +13,7 @@
 * `assign_fp` - assign file permissions to a user. This is an elevated operation and requires admin creds.
 * `list_roles` - list all roles supported.This is an elevated operation and requires admin creds.
 * `is_authorized` - check if a user is authorized to access a resource. 
-* `reset_password` - resets user password, requires user credentials.
+* `change_password` - resets user password, requires user credentials.
 
 ## default locations
 
