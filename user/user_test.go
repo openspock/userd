@@ -34,8 +34,8 @@ func TestParseUser(t *testing.T) {
 			t.Error("file permission for incorrect user id found - " + v[0].UserID)
 			t.Fail()
 		}
-		if v[0].Roles.Name == "admin" {
-			t.Error("incorrect role assigned for file permission - " + v[0].Roles.Name)
+		if v[0].Role.Name == "admin" {
+			t.Error("incorrect role assigned for file permission - " + v[0].Role.Name)
 			t.Fail()
 		}
 	}
