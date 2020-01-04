@@ -1,6 +1,6 @@
 # userd - a simple user management (non)daemon program.
 
-`userd` is a simple program that simplifies user management and ACL for various resource in a system.
+`userd` is a lightweight program that simplifies user management and ACL for various resource in a system/ application.
 
 It enables an admin to setup userd in a convenient location. An admin can then create users, assign permissions to file(resources - we will use file and resources alternatively through out the doc), create roles, etc.
 
@@ -33,3 +33,22 @@ A user can check if they are authorized to access a particular resource. The def
 ## who can invoke these lifecycle functions
 
 Each `write` interaction with `userd` will require admin credentials. Read operations do not require admin credentials but require user credentials. 
+
+# current open challenges
+
+This software isn't production ready yet and is just a protoype. The following feature enhancements are mandatory to make it production ready -
+
+## concurrent data file access
+
+Every real world application consists of hundreds of thousands of users. To ensure that this software functions smoothly with so many users, access to data files must be concurrent.
+
+* Concurrent access to files
+* Multiple processes should wait for file to be available for write access.
+* Each userd process should be atomic.
+
+## server mode - tcp/ grpc/ http/ etc.
+
+Even though userd can be executed as a standalone lightweight (child) process, it can't be done when one wants to use it as a centralized auth server. 
+
+* support secure tcp server using grpc/ json payload.
+* support http RESTful access - optional.
