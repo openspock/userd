@@ -54,5 +54,5 @@ Even though userd can be executed as a standalone lightweight (child) process, i
 * support http RESTful access - optional.
 
 ```
-go run main.go -op create_user -admin-email ameyabhurke@outlook.com -admin-password password1 -location C:\Users\ameya\userd -email testuser@openspock.org -expiration 2020-12-31 -password password1 -confirm-password password1 -description "testing fslock" -role api
+go run main.go -op create_user -admin-email ameyabhurke@outlook.com -admin-password password1 -location file:///home/abhurke/userd -email testuser@openspock.org -expiration 2020-12-31 -password password1 -confirm-password password1 -description "testing fslock" -role api
 ```

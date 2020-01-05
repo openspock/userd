@@ -297,9 +297,8 @@ func parse() {
 
 func main() {
 	parse()
-	fmt.Println(adminEmail)
+
 	if adminEmail == nilCredentials {
-		fmt.Println("It's your first time! " + adminEmail)
 		handleFirstTime()
 	} else {
 		// authenticate admin

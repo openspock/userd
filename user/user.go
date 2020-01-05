@@ -5,7 +5,6 @@ package user
 import (
 	"encoding/csv"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -143,7 +142,7 @@ func NewConfig(file string) (*Configuration, error) {
 
 	if _, err := os.Stat(c.Location); os.IsNotExist(err) {
 		os.Mkdir(c.Location, os.ModeDir)
-		if err := os.Chmod(c.Location, 0644); err != nil {
+		if err := os.Chmod(c.Location, 0755); err != nil {
 			return nil, err
 		}
 	}
@@ -176,12 +175,11 @@ func (c *Configuration) InitRead() error {
 }
 
 func (c *Configuration) read(file string, handler parseRecord, insertIntoTable tableInsert) error {
-	fmt.Println("opening " + file)
-
 	config, err := os.Open(file)
 	if err != nil {
 		return err
 	}
+	defer config.Close()
 
 	r := csv.NewReader(config)
 	for {
@@ -198,10 +196,6 @@ func (c *Configuration) read(file string, handler parseRecord, insertIntoTable t
 		}
 		insertIntoTable(key, u)
 	}
-
-	config.Close()
-
-	fmt.Println("closed " + file)
 
 	return nil
 }
@@ -223,7 +217,6 @@ func (c *Configuration) WriteFP(fp *FilePermission) error {
 
 func (c *Configuration) write(file string, entry []string) error {
 	if _, err := os.Stat(file); err == nil {
-		fmt.Println("trying to lock " + file + " for write...")
 		lock := fslock.New(file)
 		if err := lock.TryLock(); err != nil {
 			return err
