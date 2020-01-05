@@ -5,12 +5,15 @@ package user
 import (
 	"encoding/csv"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/juju/fslock"
+	"github.com/openspock/userd/config"
 )
 
 // AccessPermissions is a enumeration constant for resource access permissions.
@@ -147,15 +150,15 @@ func NewConfig(file string) (*Configuration, error) {
 }
 
 func (c *Configuration) userConfFileName() string {
-	return c.Location + "/user.conf"
+	return c.Location + config.GetUserConfFileName()
 }
 
 func (c *Configuration) roleConfFileName() string {
-	return c.Location + "/role.conf"
+	return c.Location + config.GetRoleConfFileName()
 }
 
 func (c *Configuration) filePermissionFileName() string {
-	return c.Location + "/filepermission.conf"
+	return c.Location + config.GetFPFileName()
 }
 
 // InitRead initializes userd configuration.
@@ -163,17 +166,20 @@ func (c *Configuration) filePermissionFileName() string {
 // 1. init user conf
 // 2. int fperm conf
 func (c *Configuration) InitRead() error {
-	err := c.initExisting(c.userConfFileName(), parseUser, userTableInsert)
-	err = c.initExisting(c.roleConfFileName(), parseRoles, roleTableInsert)
-	err = c.initExisting(c.filePermissionFileName(), parseFilePermission, filePermissionTableInsert)
+	err := c.read(c.userConfFileName(), parseUser, userTableInsert)
+	err = c.read(c.roleConfFileName(), parseRoles, roleTableInsert)
+	err = c.read(c.filePermissionFileName(), parseFilePermission, filePermissionTableInsert)
 	return err
 }
 
-func (c *Configuration) initExisting(file string, handler parseRecord, insertIntoTable tableInsert) error {
+func (c *Configuration) read(file string, handler parseRecord, insertIntoTable tableInsert) error {
+	fmt.Println("opening " + file)
+
 	config, err := os.Open(file)
 	if err != nil {
 		return err
 	}
+
 	r := csv.NewReader(config)
 	for {
 		record, err := r.Read()
@@ -189,6 +195,11 @@ func (c *Configuration) initExisting(file string, handler parseRecord, insertInt
 		}
 		insertIntoTable(key, u)
 	}
+
+	config.Close()
+
+	fmt.Println("closed " + file)
+
 	return nil
 }
 
@@ -208,6 +219,13 @@ func (c *Configuration) WriteFP(fp *FilePermission) error {
 }
 
 func (c *Configuration) write(file string, entry []string) error {
+	fmt.Println("trying to lock " + file + " for write...")
+	lock := fslock.New(file)
+	if err := lock.TryLock(); err != nil {
+		return err
+	}
+	defer lock.Unlock()
+
 	f, err := os.OpenFile(file, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
