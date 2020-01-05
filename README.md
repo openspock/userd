@@ -43,6 +43,7 @@ This software isn't production ready yet and is just a protoype. The following f
 Every real world application consists of hundreds of thousands of users. To ensure that this software functions smoothly with so many users, access to data files must be concurrent.
 
 * Concurrent access to files
+** supported on *nix using `github.com/juju/fslock`
 * Multiple processes should wait for file to be available for write access.
 * Each userd process should be atomic.
 
