@@ -104,8 +104,11 @@ func getExpirationDate() time.Time {
 func handleLocation() {
 	if location == "" {
 		location = config.GetDefaultLocation()
-		_, err := user.NewConfig(location)
-		handleError(err)
+
+		if _, err := os.Stat(location); err == nil {
+			_, err := user.NewConfig(location)
+			handleError(err)
+		}
 		if len(user.UserTable) == 0 && adminEmail == "" {
 			adminEmail = string(nilCredentials)
 			adminPwd = string(nilCredentials)
@@ -294,8 +297,9 @@ func parse() {
 
 func main() {
 	parse()
-
+	fmt.Println(adminEmail)
 	if adminEmail == nilCredentials {
+		fmt.Println("It's your first time! " + adminEmail)
 		handleFirstTime()
 	} else {
 		// authenticate admin
