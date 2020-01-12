@@ -51,9 +51,20 @@ Every real world application consists of hundreds of thousands of users. To ensu
 
 Even though userd can be executed as a standalone lightweight (child) process, it can't be done when one wants to use it as a centralized auth server. 
 
-* support secure tcp server using grpc/ json payload.
+* support secure tcp server using grpc/ json payload for authorization and authentication.
+  The tls server expects the following files in the `userd` location.
+  ** `server.crt`
+  ** `server.key`
 * support http RESTful access - optional.
 
 ```
 go run main.go -op create_user -admin-email ameyabhurke@outlook.com -admin-password password1 -location file:///home/abhurke/userd -email testuser@openspock.org -expiration 2020-12-31 -password password1 -confirm-password password1 -description "testing fslock" -role api
+```
+
+# supporting material
+
+## how to generate a self signed cert with public private key
+```
+openssl genrsa -des3 -out server.key 2048
+openssl rsa -in server.key -outform PEM -pubout -out server.crt
 ```

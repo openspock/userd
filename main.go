@@ -9,6 +9,7 @@ import (
 
 	"github.com/openspock/log"
 	config "github.com/openspock/userd/config"
+	net "github.com/openspock/userd/net"
 	user "github.com/openspock/userd/user"
 )
 
@@ -30,6 +31,7 @@ var resource string
 var expiration string
 var newPassword string
 var confirmPassword string
+var server string
 
 func init() {
 	flag.StringVar(&op, "op", "", "Userd operation\n\t* create_user\n\t* create_role\n\t* assign_fp (assign file permissions)\n\t* list_roles (you will require the uuid when creating a user)\n\t* is_authorized (check if user is authorized to access resource/file)")
@@ -46,6 +48,7 @@ func init() {
 	flag.StringVar(&expiration, "expiration", "", "expiration date in yyyy-MM-dd format")
 	flag.StringVar(&newPassword, "new-password", "", "New password")
 	flag.StringVar(&confirmPassword, "confirm-password", "", "Confirm password")
+	flag.StringVar(&server, "server", "", "Start server")
 }
 
 func printHelp() {
@@ -253,6 +256,30 @@ func changePassword() {
 	user.ChangePassword(email, password, newPassword, confirmPassword, location)
 }
 
+func startServer() {
+	if adminEmail == "" {
+		handleError("admin email is required")
+	}
+	if adminPwd == "" {
+		handleError("admin password is required")
+	}
+	if location == "" {
+		handleError("location is required")
+	}
+
+	if err := user.AuthenticateForRole(adminEmail, adminPwd, location, user.Admin); err != nil {
+		handleError(err)
+	}
+
+	c, err := user.NewConfig(location)
+	if err != nil {
+		handleError(err)
+	}
+	if err := net.Listen("9669", c.Location); err != nil {
+		handleError(err)
+	}
+}
+
 func handleOp() {
 	if op == "" {
 		fmt.Println("op is a mandatory parameter. Select one of the options specified for op.")
@@ -272,6 +299,8 @@ func handleOp() {
 		isAuthorized()
 	case "change_password":
 		changePassword()
+	case "server":
+		startServer()
 	default:
 		handleError("This op is not supported!")
 	}
