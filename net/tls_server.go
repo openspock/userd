@@ -28,6 +28,14 @@ type Command struct {
 	ConfirmPassword string
 }
 
+func (c Command) String() string {
+	data, err := json.Marshal(c)
+	if err != nil {
+		return "error"
+	}
+	return string(data)
+}
+
 // Listen starts a tls server on port provided and listens to incoming
 // connections.
 func Listen(port, certLocation string) error {
@@ -61,20 +69,22 @@ func handleConnection(conn net.Conn) {
 	var cmd Command
 
 	r := bufio.NewReader(conn)
-	for {
-		cmdStr, err := r.ReadString('\n')
-		if err != nil {
-			log.Error(err.Error(), log.SysLog, map[string]interface{}{})
-			return
-		}
+	//for {
+	req := make([]byte, 1024)
+	_, err := r.Read(req)
 
-		json.Unmarshal([]byte(cmdStr), &cmd)
-		log.Info(cmdStr, log.AppLog, map[string]interface{}{})
-
-		_, err = conn.Write([]byte(`{"result":"success"}`))
-		if err != nil {
-			log.Error(err.Error(), log.SysLog, map[string]interface{}{})
-			return
-		}
+	if err != nil {
+		log.Error(err.Error(), log.SysLog, map[string]interface{}{})
+		return
 	}
+
+	json.Unmarshal([]byte(string(req)), &cmd)
+	log.Info(cmd.String(), log.AppLog, map[string]interface{}{})
+
+	_, err = conn.Write([]byte(`{"result":"success"}`))
+	if err != nil {
+		log.Error(err.Error(), log.SysLog, map[string]interface{}{})
+		return
+	}
+	//}
 }

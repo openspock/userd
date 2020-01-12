@@ -64,7 +64,11 @@ go run main.go -op create_user -admin-email ameyabhurke@outlook.com -admin-passw
 # supporting material
 
 ## how to generate a self signed cert with public private key
+Servert certificate and key can be generated using - 
 ```
-openssl genrsa -des3 -out server.key 2048
-openssl rsa -in server.key -outform PEM -pubout -out server.crt
+openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout server.key -out server.crt
+```
+Client certificate and key can be generated using - 
+```
+openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout client.key -out client.crt
 ```
