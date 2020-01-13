@@ -20,11 +20,11 @@ type AccessPermissions int
 
 const (
 	// Read indicates read right
-	Read AccessPermissions = 1 << iota
+	Read AccessPermissions = iota
 	// Write indicates write right
-	Write AccessPermissions = 1 << iota
+	Write
 	// ReadWrite indicates both read and write right
-	ReadWrite AccessPermissions = Read | Write
+	ReadWrite
 )
 
 // Role represents a role assignable to a User

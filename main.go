@@ -275,7 +275,7 @@ func startServer() {
 	if err != nil {
 		handleError(err)
 	}
-	if err := net.Listen("9669", c.Location); err != nil {
+	if err := net.Listen("9669", c.Location, location); err != nil {
 		handleError(err)
 	}
 }
