@@ -206,7 +206,7 @@ func Authorize(email, password, file, resource string) error {
 	var isRoleOk bool = false
 	var isExpirationOk bool = false
 	for _, fp := range fps {
-		if !isRoleOk && fp.Role.RoleID == u.RoleID {
+		if !isRoleOk && (fp.Role.RoleID == "" || fp.Role.RoleID == u.RoleID) {
 			isRoleOk = true
 		}
 		if time.Now().Before(fp.Expiration) {
